@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encuesta AE3 – Protocolo de contingencia</title>
+<style>
+  :root{
+    --azul-oscuro:#1F4E79;
+    --azul:#2E75B6;
+    --azul-medio:#9DC3E6;
+    --azul-claro:#DEEAF6;
+    --blanco:#FFFFFF;
+    --negro:#000000;
+    --error:#B00020;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--azul-claro);color:var(--negro);
+    font-family:Calibri,Carlito,"Segoe UI",Arial,sans-serif;font-size:12pt;line-height:1.5;
+  }
+  header{background:var(--azul-oscuro);color:var(--blanco);padding:24px 16px}
+  header .contenedor{max-width:760px;margin:0 auto}
+  header h1{margin:0;font-size:1.5rem;line-height:1.3}
+  header p{margin:6px 0 0;text-align:justify}
+  main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+  .tarjeta{background:var(--blanco);border-top:4px solid var(--azul);border-radius:6px;padding:20px;margin-bottom:16px}
+  .tarjeta h2{margin:0 0 12px;font-size:1.1rem;color:var(--negro);border-bottom:1px solid var(--azul-medio);padding-bottom:6px}
+  p.ayuda{margin:0 0 12px;text-align:justify}
+  label{display:block;font-weight:bold;margin:14px 0 4px}
+  .req{color:var(--azul)}
+  input[type=text],input[type=email],select,textarea{
+    width:100%;padding:8px 10px;border:1px solid var(--azul-medio);border-radius:4px;
+    font:inherit;color:var(--negro);background:var(--blanco)
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--azul);outline-offset:1px}
+  textarea{min-height:70px;resize:vertical}
+  .opcion{display:flex;gap:8px;align-items:flex-start;font-weight:normal;margin:8px 0}
+  .opcion input{margin-top:5px;accent-color:var(--azul)}
+  .detalle{margin:4px 0 10px 26px}
+  .detalle label{font-weight:normal;margin-top:4px}
+  .oculto{display:none}
+  .fila-radio{display:flex;gap:24px;flex-wrap:wrap}
+  button{
+    background:var(--azul-oscuro);color:var(--blanco);border:0;border-radius:4px;
+    padding:12px 24px;font:inherit;font-weight:bold;cursor:pointer
+  }
+  button:hover{background:var(--azul)}
+  button:disabled{opacity:.6;cursor:wait}
+  .msg-error{color:var(--error);font-size:.95em;margin-top:4px}
+  .aviso{padding:12px 14px;border-radius:4px;margin-bottom:16px;text-align:justify}
+  .aviso.ok{background:var(--azul-oscuro);color:var(--blanco)}
+  .aviso.mal{background:var(--blanco);color:var(--negro);border:2px solid var(--error)}
+  .trampa{position:absolute;left:-9999px}
+  footer{text-align:center;font-size:.9em;padding-bottom:24px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="contenedor">
+    <h1>Desarrollo de la AE3 con protocolo de contingencia</h1>
+    <p>Relevamiento por sede y carrera. Complete una respuesta por cada carrera de su sede. El formulario lleva menos de cinco minutos.</p>
+  </div>
+</header>
+
+<main>
+  <div id="aviso" class="aviso oculto" role="status"></div>
+
+  <form id="encuesta" novalidate>
+    <!-- Campo trampa contra envíos automáticos: las personas no lo ven -->
+    <input type="text" name="web" class="trampa" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <section class="tarjeta">
+      <h2>1. Datos de quien responde</h2>
+      <label for="responsable">Nombre y apellido <span class="req">*</span></label>
+      <input type="text" id="responsable" name="responsable" required>
+      <label for="cargo">Cargo <span class="req">*</span></label>
+      <input type="text" id="cargo" name="cargo" placeholder="Ej.: Director/a de carrera, Coordinador/a de sede" required>
+      <label for="correo">Correo electrónico</label>
+      <input type="email" id="correo" name="correo">
+    </section>
+
+    <section class="tarjeta">
+      <h2>2. Sede y carrera</h2>
+      <label for="sede">Sede <span class="req">*</span></label>
+      <select id="sede" name="sede" required></select>
+      <div id="sedeOtraBox" class="detalle oculto">
+        <label for="sedeOtra">Indique la sede <span class="req">*</span></label>
+        <input type="text" id="sedeOtra" name="sedeOtra">
+      </div>
+      <label for="carrera">Carrera <span class="req">*</span></label>
+      <input type="text" id="carrera" name="carrera" list="listaCarreras" required>
+      <datalist id="listaCarreras"></datalist>
+    </section>
+
+    <section class="tarjeta">
+      <h2>3. Aplicación del protocolo</h2>
+      <p class="ayuda">¿La carrera precisó desarrollar la AE3 con el protocolo de contingencia en alguna asignatura? <span class="req">*</span></p>
+      <div class="fila-radio" id="grupoProtocolo">
+        <label class="opcion"><input type="radio" name="protocolo" value="Sí"> Sí</label>
+        <label class="opcion"><input type="radio" name="protocolo" value="No"> No</label>
+      </div>
+    </section>
+
+    <section class="tarjeta oculto" id="bloqueCausas">
+      <h2>4. Asignaturas y causas</h2>
+      <label for="asignaturasProtocolo">Asignaturas en las que se aplicó el protocolo <span class="req">*</span></label>
+      <textarea id="asignaturasProtocolo" name="asignaturasProtocolo" placeholder="Una por línea"></textarea>
+
+      <p class="ayuda" style="margin-top:14px"><strong>Causas</strong> (marque todas las que correspondan) <span class="req">*</span></p>
+      <div id="grupoCausas">
+        <label class="opcion"><input type="checkbox" name="causa" value="equipamiento"> Equipamiento insuficiente</label>
+
+        <label class="opcion"><input type="checkbox" name="causa" value="superposicion"> Superposición de cátedras (horarios / días)</label>
+        <div class="detalle oculto" data-detalle="superposicion">
+          <label for="detalleSuperposicion">Asignaturas, días y horarios superpuestos</label>
+          <textarea id="detalleSuperposicion" name="detalleSuperposicion"></textarea>
+        </div>
+
+        <label class="opcion"><input type="checkbox" name="causa" value="noCargada"> La AE3 no se encontraba cargada en el aula</label>
+        <div class="detalle oculto" data-detalle="noCargada">
+          <label for="asignaturasNoCargada">¿En qué asignaturas? <span class="req">*</span></label>
+          <textarea id="asignaturasNoCargada" name="asignaturasNoCargada" placeholder="Una por línea"></textarea>
+        </div>
+
+        <label class="opcion"><input type="checkbox" name="causa" value="conectividad"> Inconvenientes en la conectividad</label>
+
+        <label class="opcion"><input type="checkbox" name="causa" value="tecnicos"> Inconvenientes técnicos</label>
+        <div class="detalle oculto" data-detalle="tecnicos">
+          <label for="detalleTecnicos">Describa brevemente el inconveniente</label>
+          <textarea id="detalleTecnicos" name="detalleTecnicos"></textarea>
+        </div>
+
+        <label class="opcion"><input type="checkbox" name="causa" value="otra"> Otra causa</label>
+        <div class="detalle oculto" data-detalle="otra">
+          <label for="otraCausa">Especifique <span class="req">*</span></label>
+          <textarea id="otraCausa" name="otraCausa"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Observaciones</h2>
+      <textarea id="observaciones" name="observaciones" placeholder="Opcional"></textarea>
+    </section>
+
+    <button type="submit" id="btnEnviar">Enviar respuesta</button>
+  </form>
+
+  <!-- Descarga para administración: se ve solo agregando ?admin al final de la dirección -->
+  <section class="tarjeta oculto" id="panelAdmin" style="margin-top:24px">
+    <h2>Descargar respuestas en Excel</h2>
+    <label for="clave">Clave</label>
+    <input type="text" id="clave" autocomplete="off">
+    <p style="margin-top:12px"><button type="button" id="btnExcel">Descargar Excel</button></p>
+    <div id="avisoAdmin"></div>
+  </section>
+</main>
+
+<footer>SIED · Universidad de la Cuenca del Plata</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ===================== CONFIGURACIÓN ===================== */
+// Dirección de la aplicación web de Apps Script (termina en /exec)
+const URL_SCRIPT = 'PEGAR_AQUI_LA_URL_DEL_APPS_SCRIPT';
+
+// Sedes que aparecen en la lista (se agrega "Otra" al final)
+const SEDES = [
+  'Corrientes (Sede Central)',
+  'Resistencia (Chaco)',
+  'Formosa (Formosa)',
+  'Posadas (Misiones)',
+  'Paso de los Libres (Corrientes)',
+  'Curuzú Cuatiá (Corrientes)',
+  'Sáenz Peña (Chaco)',
+  'Goya (Corrientes)',
+  'Leandro N. Alem (Misiones)'
+];
+
+// Carreras sugeridas al escribir (se puede igual escribir otra)
+const CARRERAS = [
+  // 'Contador Público',
+  // 'Lic. en Psicología',
+];
+/* ========================================================= */
+
+const $ = id => document.getElementById(id);
+const form = $('encuesta');
+
+// Cargar listas
+$('sede').innerHTML = '<option value="">Seleccione…</option>' +
+  SEDES.map(s => `<option>${s}</option>`).join('') + '<option value="__otra">Otra</option>';
+$('listaCarreras').innerHTML = CARRERAS.map(c => `<option value="${c}">`).join('');
+
+// Campos condicionales
+$('sede').addEventListener('change', () =>
+  $('sedeOtraBox').classList.toggle('oculto', $('sede').value !== '__otra'));
+
+form.querySelectorAll('input[name=protocolo]').forEach(r =>
+  r.addEventListener('change', () =>
+    $('bloqueCausas').classList.toggle('oculto', valorRadio('protocolo') !== 'Sí')));
+
+form.querySelectorAll('input[name=causa]').forEach(c =>
+  c.addEventListener('change', () => {
+    const box = form.querySelector(`[data-detalle="${c.value}"]`);
+    if (box) box.classList.toggle('oculto', !c.checked);
+  }));
+
+function valorRadio(nombre){
+  const r = form.querySelector(`input[name=${nombre}]:checked`);
+  return r ? r.value : '';
+}
+function causas(){
+  return [...form.querySelectorAll('input[name=causa]:checked')].map(c => c.value);
+}
+
+// Validación
+function limpiarErrores(){ form.querySelectorAll('.msg-error').forEach(e => e.remove()); }
+function marcarError(el, texto){
+  const d = document.createElement('div'); d.className = 'msg-error'; d.textContent = texto;
+  el.insertAdjacentElement('afterend', d);
+}
+function validar(){
+  limpiarErrores();
+  const errores = [];
+  const obligatorio = (id, texto) => { if (!$(id).value.trim()) errores.push([$(id), texto]); };
+
+  obligatorio('responsable', 'Complete su nombre.');
+  obligatorio('cargo', 'Indique su cargo.');
+  if ($('correo').value && !$('correo').checkValidity()) errores.push([$('correo'), 'Revise el correo.']);
+  if (!$('sede').value) errores.push([$('sede'), 'Seleccione la sede.']);
+  if ($('sede').value === '__otra') obligatorio('sedeOtra', 'Indique la sede.');
+  obligatorio('carrera', 'Indique la carrera.');
+
+  const prot = valorRadio('protocolo');
+  if (!prot) errores.push([$('grupoProtocolo'), 'Indique si se aplicó el protocolo.']);
+  if (prot === 'Sí'){
+    obligatorio('asignaturasProtocolo', 'Indique las asignaturas.');
+    const cs = causas();
+    if (!cs.length) errores.push([$('grupoCausas'), 'Marque al menos una causa.']);
+    if (cs.includes('noCargada')) obligatorio('asignaturasNoCargada', 'Indique las asignaturas sin AE3 cargada.');
+    if (cs.includes('otra')) obligatorio('otraCausa', 'Especifique la otra causa.');
+  }
+  errores.forEach(([el, t]) => marcarError(el, t));
+  if (errores.length) errores[0][0].scrollIntoView({behavior:'smooth', block:'center'});
+  return errores.length === 0;
+}
+
+function datos(){
+  const prot = valorRadio('protocolo');
+  const cs = prot === 'Sí' ? causas() : [];
+  const si = v => cs.includes(v) ? 'Sí' : 'No';
+  const txt = id => $(id).value.trim();
+  return {
+    web: form.web.value,
+    responsable: txt('responsable'),
+    cargo: txt('cargo'),
+    correo: txt('correo'),
+    sede: $('sede').value === '__otra' ? txt('sedeOtra') : $('sede').value,
+    carrera: txt('carrera'),
+    protocolo: prot,
+    asignaturasProtocolo: prot === 'Sí' ? txt('asignaturasProtocolo') : '',
+    equipamiento: prot === 'Sí' ? si('equipamiento') : '',
+    superposicion: prot === 'Sí' ? si('superposicion') : '',
+    detalleSuperposicion: cs.includes('superposicion') ? txt('detalleSuperposicion') : '',
+    noCargada: prot === 'Sí' ? si('noCargada') : '',
+    asignaturasNoCargada: cs.includes('noCargada') ? txt('asignaturasNoCargada') : '',
+    conectividad: prot === 'Sí' ? si('conectividad') : '',
+    tecnicos: prot === 'Sí' ? si('tecnicos') : '',
+    detalleTecnicos: cs.includes('tecnicos') ? txt('detalleTecnicos') : '',
+    otraCausa: cs.includes('otra') ? txt('otraCausa') : '',
+    observaciones: txt('observaciones')
+  };
+}
+
+function aviso(texto, ok){
+  const a = $('aviso');
+  a.textContent = texto; a.className = 'aviso ' + (ok ? 'ok' : 'mal');
+  a.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+form.addEventListener('submit', async ev => {
+  ev.preventDefault();
+  if (URL_SCRIPT.startsWith('PEGAR')) { aviso('La encuesta todavía no está conectada a la planilla de respuestas.', false); return; }
+  if (!validar()) return;
+  const btn = $('btnEnviar'); btn.disabled = true; btn.textContent = 'Enviando…';
+  try{
+    const r = await fetch(URL_SCRIPT, { method:'POST', body: JSON.stringify(datos()) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Error');
+    form.reset();
+    $('bloqueCausas').classList.add('oculto');
+    $('sedeOtraBox').classList.add('oculto');
+    form.querySelectorAll('[data-detalle]').forEach(d => d.classList.add('oculto'));
+    aviso('¡Gracias! La respuesta quedó registrada. Si corresponde, puede cargar otra carrera.', true);
+  }catch(e){
+    aviso('No se pudo enviar la respuesta. Revise la conexión e intente de nuevo.', false);
+  }finally{
+    btn.disabled = false; btn.textContent = 'Enviar respuesta';
+  }
+});
+
+/* ---------- Descarga en Excel (panel oculto) ---------- */
+if (new URLSearchParams(location.search).has('admin')) $('panelAdmin').classList.remove('oculto');
+
+$('btnExcel').addEventListener('click', async () => {
+  const msg = $('avisoAdmin'); msg.textContent = 'Descargando…';
+  try{
+    const r = await fetch(URL_SCRIPT + '?clave=' + encodeURIComponent($('clave').value));
+    const j = await r.json();
+    if (!j.ok) { msg.textContent = 'Clave incorrecta.'; return; }
+    const hoja = XLSX.utils.aoa_to_sheet([j.encabezados, ...j.filas]);
+    hoja['!cols'] = j.encabezados.map(h => ({ wch: Math.max(14, Math.min(45, h.length + 4)) }));
+    hoja['!autofilter'] = { ref: hoja['!ref'] };
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Respuestas');
+    const hoy = new Date().toLocaleDateString('es-AR').replaceAll('/', '-');
+    XLSX.writeFile(libro, `Encuesta_AE3_contingencia_${hoy}.xlsx`);
+    msg.textContent = `Listo: ${j.filas.length} respuestas.`;
+  }catch(e){
+    msg.textContent = 'No se pudo descargar.';
+  }
+});
+</script>
+</body>
+</html>
